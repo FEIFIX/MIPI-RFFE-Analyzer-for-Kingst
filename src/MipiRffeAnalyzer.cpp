@@ -104,7 +104,7 @@ U8 MipiRffeAnalyzer::AnalyzeByCsType(U8 cmd)
 
 U8 MipiRffeAnalyzer::AdvanceAndRead(U64 *last_pos)
 {
-	U64 pos;
+	U64 pos, pos2;
 	U8 ha, res1, res2;
 	mSclk->AdvanceToNextEdge();
 	pos = mSclk->GetSampleNumber() - 1;
@@ -112,18 +112,27 @@ U8 MipiRffeAnalyzer::AdvanceAndRead(U64 *last_pos)
 	res1 = mSdat->GetBitState();
 	mSdat->Advance(1);
 	res2 = mSdat->GetBitState();
-	ha += BothAndvanceToNextEdge(BySclk);
 	if (ha >= 2) 
 	{ 
 		ERRORs |= HAZARD_ERROR_FLAG; 
-		mResults->AddMarker(pos, AnalyzerResults::ErrorSquare, mSettings->mSdatChannel);
+		mResults->AddMarker(pos+1, AnalyzerResults::ErrorSquare, mSettings->mSdatChannel);
 	}
+
+	ha = BothAndvanceToNextEdge(BySclk);
+	if (ha >= 2)
+	{
+		pos2 = mSclk->GetSampleNumber();
+		ERRORs |= HAZARD_ERROR_FLAG;
+		mResults->AddMarker(pos2, AnalyzerResults::ErrorSquare, mSettings->mSdatChannel);
+	}
+	
+
 	if (res1 != res2) 
 	{ 
 		ERRORs |= RACE_ERROR_FLAG; 
-		mResults->AddMarker(pos, AnalyzerResults::ErrorX, mSettings->mSdatChannel);
+		mResults->AddMarker(pos+1, AnalyzerResults::ErrorX, mSettings->mSdatChannel);
 	}
-	mResults->AddMarker(pos, AnalyzerResults::DownArrow, mSettings->mSclkChannel);
+	mResults->AddMarker(pos+1, AnalyzerResults::DownArrow, mSettings->mSclkChannel);
 	last_pos[0] = pos;
 	return res1;
 }
