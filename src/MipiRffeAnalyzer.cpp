@@ -34,6 +34,7 @@ void MipiRffeAnalyzer::AdvanceToSscEnd()
 	U8 n0, n1;
 	U64 pos1, pos2;
 	pos1 = pos2 = 0;
+	n0 = 1;
 	// 调用之前要求对齐
 	if (mSdat->GetBitState() != BIT_LOW)
 	{
@@ -41,21 +42,23 @@ void MipiRffeAnalyzer::AdvanceToSscEnd()
 	} 
 	for (;;)
 	{
-		mSdat->Advance(1);
-		mSclk->Advance(1);
-		n0 = mSdat->GetBitState();
-		n1 = mSclk->GetBitState();
-		if ((n0 != nd % 2) || (n1 != nc % 2)) 
-		{ 
-			nd = nd * 2; 
-			nd += n0;  
-			nc = nc * 2; 
-			nc += n1;
-			pos1 = pos2;
-			pos2 = mSdat->GetSampleNumber();
+		BothAndvanceToNextEdge(BySdat);
+		pos1 = mSdat->GetSampleNumber();
+		if (mSclk->GetBitState() != BIT_LOW)
+		{
+			BothAndvanceToNextEdge(BySdat);
+			continue;
 		}
-		if ((nc % 8 == 0) && (nd % 8 == 2))
-			break;
+		else
+		{
+			mSdat->AdvanceToNextEdge();
+			pos2 = mSdat->GetSampleNumber();
+			n0 = mSclk->AdvanceToAbsPosition(pos2);
+			if ((n0 == 0) && (mSclk->GetBitState() == BIT_LOW))
+			{
+				break;
+			}
+		}
 	}
 	mResults->AddMarker((pos2+pos1)/2, AnalyzerResults::Square, mSettings->mSdatChannel);
 	if (BothAndvanceToNextEdge(BySclk) >= 2)
@@ -117,7 +120,6 @@ U8 MipiRffeAnalyzer::AdvanceAndRead(U64 *last_pos)
 		ERRORs |= HAZARD_ERROR_FLAG; 
 		mResults->AddMarker(pos+1, AnalyzerResults::ErrorSquare, mSettings->mSdatChannel);
 	}
-
 	ha = BothAndvanceToNextEdge(BySclk);
 	if (ha >= 2)
 	{
@@ -125,8 +127,6 @@ U8 MipiRffeAnalyzer::AdvanceAndRead(U64 *last_pos)
 		ERRORs |= HAZARD_ERROR_FLAG;
 		mResults->AddMarker(pos2, AnalyzerResults::ErrorSquare, mSettings->mSdatChannel);
 	}
-	
-
 	if (res1 != res2) 
 	{ 
 		ERRORs |= RACE_ERROR_FLAG; 
