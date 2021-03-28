@@ -14,11 +14,11 @@ void MipiRffeSimulationDataGenerator::Initialize(U32 simulation_sample_rate, Mip
 	mSimulationSampleRateHz = simulation_sample_rate;
 	mSettings = settings;
 
-	mSclkGenerator.Init(simulation_sample_rate / 20, simulation_sample_rate);
+	mSclkGenerator.Init(simulation_sample_rate / 4, simulation_sample_rate);
 
 	mSdat = mMipiRffeSimulationChannels.Add(settings->mSdatChannel, mSimulationSampleRateHz, BIT_LOW);
 	mSclk = mMipiRffeSimulationChannels.Add(settings->mSclkChannel, mSimulationSampleRateHz, BIT_LOW);
-	mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10.0));     //insert 10 bit-periods of idle
+	mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(4.0));     //insert 4 bit-periods of idle
 }
 
 
@@ -53,11 +53,11 @@ U32 MipiRffeSimulationDataGenerator::GenerateSimulationData(U64 largest_sample_r
 			BitExtractor data_bits(seqs[i], AnalyzerEnums::MsbFirst, seq_len[i]);
 			mSclk->TransitionIfNeeded(BIT_LOW);
 			mSdat->TransitionIfNeeded(BIT_LOW);
-			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(200.0));
+			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(20.0));
 			mSdat->Transition();
-			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10));  // SSC
+			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));  // SSC
 			mSdat->Transition();
-			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10));
+			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
 			for (j = 0; j < seq_len[i]; j++)
 			{
 				
@@ -73,25 +73,25 @@ U32 MipiRffeSimulationDataGenerator::GenerateSimulationData(U64 largest_sample_r
 				{
 					mSclk->TransitionIfNeeded(BIT_HIGH);
 					mSdat->TransitionIfNeeded(data_bits.GetNextBit());
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(8));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(0.8));
 					mSdat->Transition();
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(0.1));
 					mSdat->Transition();
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(0.1));
 					mSclk->TransitionIfNeeded(BIT_LOW);
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
 				}
 				else
 				{
 					mSclk->TransitionIfNeeded(BIT_HIGH);
 					mSdat->TransitionIfNeeded(data_bits.GetNextBit());
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
 					mSclk->TransitionIfNeeded(BIT_LOW);
-					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(10));
+					mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(1));
 				}
 				
 			}
-			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(200));
+			mMipiRffeSimulationChannels.AdvanceAll(mSclkGenerator.AdvanceByHalfPeriod(160));
 
 		}
 
